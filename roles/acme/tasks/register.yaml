@@ -1,0 +1,36 @@
+- name: Ensure the ACME file location is available
+  file: path={{ acme_root_secret_file | dirname }} state=directory
+  run_once: yes
+  delegate_to: localhost
+
+- name: Generate the ACME account private key
+  community.crypto.openssl_privatekey_pipe:
+    content: "{{ lookup('file', acme_root_secret_file, errors='ignore') }}"
+    size: 4096
+    return_current_key: yes
+  register: acme_root_secret
+  run_once: yes
+  delegate_to: localhost
+
+- name: Record the ACME account private key
+  command:
+    ansible-vault encrypt --output {{ acme_root_secret_file | quote }} -
+  args:
+    stdin: "{{ acme_root_secret.privatekey }}"
+    stdin_add_newline: no
+  when: acme_root_secret.changed
+  run_once: yes
+  delegate_to: localhost
+
+- name: Register or update the ACME account
+  vars:
+    mail: "{{ people | selectattr('mail', 'defined') | map(attribute='mail') }}"
+  acme_account:
+    acme_directory: "{{ acme_directory }}"
+    acme_version: 2
+    account_key_content: "{{ acme_root_secret.privatekey }}"
+    contact: "{{ mail | map('regex_replace', '^', 'mailto:' ) }}"
+    state: present
+    terms_agreed: yes
+  run_once: yes
+  delegate_to: localhost

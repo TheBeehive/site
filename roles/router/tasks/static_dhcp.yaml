@@ -1,0 +1,19 @@
+- name: Retrieve the active EdgeOS configuration
+  community.network.edgeos_facts:
+    gather_subset: config
+
+- name: Configure static IP address in DHCP
+  vars:
+    subnet: "{{ router_static_dhcp.host_prefix | ipaddr('network/prefix') }}"
+    dhcp_subnet_node_regexp:
+      ^set service dhcp-server shared-network-name (.*) subnet {{ subnet }}.*$
+    node: service dhcp-server shared-network-name {{ 
+        ansible_net_config[0].splitlines() |
+        select('search', dhcp_subnet_node_regexp) | first |
+        regex_replace(dhcp_subnet_node_regexp, '\1')
+      }} subnet {{ subnet }} static-mapping {{ system_hostname | hostname }}
+  community.network.edgeos_config:
+    lines:
+    - set {{ node }} ip-address {{ router_static_dhcp.host_prefix | ipaddr('address') }}
+    - set {{ node }} mac-address '{{ router_static_dhcp.hardware_id }}'
+  notify: Save the active configuration in EdgeOS

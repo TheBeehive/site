@@ -1,0 +1,32 @@
+- name: Install QEMU, OVMF, dnsmasq, and libvirt tools
+  become: yes
+  apt:
+    name:
+    - dnsmasq-base        # To have DHCP with libvirt
+    - libxml2-utils       # For `xmllint`
+    - ovmf                # For OVMF itself
+    - qemu-system-x86-64  # For QEMU itself
+    - qemu-utils          # For `qemu-img`
+    - python3-libvirt     # For `community.libvirt` in Ansible
+    - virtinst            # For `virt-install` itself
+
+- name: Install the libvirt daemon
+  become: yes
+  apt: name=libvirt-daemon-system policy_rc_d=101
+  register: libvirt_package
+  notify: Restart the `libvirtd` service
+
+- name: Reload `systemd` configuration
+  become: yes
+  systemd: daemon_reload=yes
+  when: libvirt_package.changed
+
+- name: Add each person to the `libvirt` group
+  become: yes
+  user: name={{ item.username }} groups=libvirt append=yes
+  loop: "{{ people }}"
+
+- name: Enable and start the `libvirtd` service
+  become: yes
+  systemd: name=libvirtd enabled=yes state=started
+  register: libvirtd_service

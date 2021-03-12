@@ -1,0 +1,14 @@
+- name: Load each authorized key
+  vars:
+    pk_type: "{{ item.split(None, 2)[0] }}"
+    pk_data: "{{ item.split(None, 2)[1] }}"
+    pk_name: "{{ item.split(None, 2)[2] | default(pk_i | string) | trim }}"
+  connection: network_cli
+  community.network.edgeos_config:
+    lines:
+    - set system login user {{ person.username }} authentication public-keys {{ pk_name }} type {{ pk_type }}
+    - set system login user {{ person.username }} authentication public-keys {{ pk_name }} key {{ pk_data }}
+    save: yes
+  loop: "{{ person.authorized_keys }}"
+  loop_control:
+    index_var: pk_i

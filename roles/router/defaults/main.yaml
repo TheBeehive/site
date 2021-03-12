@@ -1,0 +1,9 @@
+# The DNS zone that the dynamic DNS request will be issued against. Defaults to
+# the portion of the inventory name of the current host.
+router_dyndns_zone: "{{ system_hostname | domainname }}"
+
+router_ipv6_remote_ip: "209.51.161.14"
+
+router_ipv6_host_prefix: "2001:470:1f06:127::2/64"
+
+router_ipv6_delegation: "2001:470:883c::/48"

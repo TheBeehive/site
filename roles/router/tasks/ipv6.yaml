@@ -1,0 +1,38 @@
+- name: Enable Hurricane Electric IPv6 over IPv4 Tunnel
+  tags: ipv6
+  community.network.edgeos_config:
+    lines:
+    - set interfaces tunnel tun0 description 'HE IPv6'
+    - set interfaces tunnel tun0 encapsulation sit
+    - set interfaces tunnel tun0 remote-ip 209.51.161.14
+    - set interfaces tunnel tun0 local-ip 96.245.155.29
+    - set interfaces tunnel tun0 address '2001:470:1f06:127::2/64'
+
+    - set protocols static interface-route6 '::/0' next-hop-interface tun0
+  notify: Save the active configuration in EdgeOS
+
+- name: Configure IPv6 with DHCPv6 on `eth2`
+  tags: ipv6
+  vars:
+    router_advert_node: interfaces ethernet eth2 ipv6 router-advert
+    router_advert_prefix_node: interfaces ethernet eth2 ipv6 router-advert prefix '2001:470:883c::/64'
+    dhcp_node: service dhcpv6-server shared-network-name Server
+    dhcp_subnet_node: service dhcpv6-server shared-network-name Server subnet '2001:470:883c::/64'
+  community.network.edgeos_config:
+    lines:
+    - set interfaces ethernet eth2 address '2001:470:883c::1/64'
+
+    - set {{ router_advert_node }} managed-flag true
+    - set {{ router_advert_node }} other-config-flag true
+    - set {{ router_advert_node }} send-advert true
+
+    - set {{ router_advert_prefix_node }} autonomous-flag false
+    - set {{ router_advert_prefix_node }} on-link-flag true
+    - set {{ router_advert_prefix_node }} valid-lifetime 86400
+
+    - set {{ dhcp_node }} name-server '2001:470:883c::1'
+    - set {{ dhcp_subnet_node }} address-range prefix '2001:470:883c::/64'
+    - set {{ dhcp_subnet_node }} lease-time default 86400
+
+    - set system static-host-mapping host-name {{ system_hostname }} inet '2001:470:883c::1'
+  notify: Save the active configuration in EdgeOS

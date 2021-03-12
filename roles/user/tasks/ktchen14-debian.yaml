@@ -1,0 +1,7 @@
+- name: Install aptitude, neovim, and htop
+  become: yes
+  apt: { name: [aptitude, neovim, htop] }
+
+- name: Install `man-db`
+  become: yes
+  apt: name=man-db

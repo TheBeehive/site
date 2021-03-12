@@ -1,0 +1,78 @@
+- name: Enable DHCP, hardware NAT, and configure the DNS server
+  community.network.edgeos_config:
+    lines:
+    - set service dhcp-server disabled false
+    - set service dhcp-server hostfile-update enable
+
+    - set system offload hwnat enable
+
+    - set system name-server 1.1.1.1
+    - set system name-server 1.0.0.1
+    - set service dns forwarding name-server 1.1.1.1
+    - set service dns forwarding name-server 1.0.0.1
+
+    - set service dns forwarding options localise-queries
+    - set service dns forwarding options domain-needed
+  notify: Save the active configuration in EdgeOS
+
+- name: Configure `switch0` with DHCP on `eth0`, `eth3`, and `eth4`
+  vars:
+    dhcp_subnet_node: service dhcp-server shared-network-name LAN subnet 192.168.1.0/24
+  community.network.edgeos_config:
+    lines:
+    - set interfaces switch switch0 address 192.168.1.1/24
+    - set interfaces switch switch0 description Home
+
+    - delete interfaces switch switch0 switch-port interface eth1
+    - delete interfaces switch switch0 switch-port interface eth2
+    - set interfaces switch switch0 switch-port interface eth0
+    - set interfaces ethernet eth0 description Home
+    - set interfaces switch switch0 switch-port interface eth3
+    - set interfaces ethernet eth3 description Home
+    - set interfaces switch switch0 switch-port interface eth4
+    - set interfaces ethernet eth4 description Home
+
+    - set {{ dhcp_subnet_node }} default-router 192.168.1.1
+    - "{{ router_domain | edgeos_action(on=dhcp_subnet_node + ' domain-name') }}"
+    - set {{ dhcp_subnet_node }} dns-server 192.168.1.1
+    - set {{ dhcp_subnet_node }} lease 86400
+    - set {{ dhcp_subnet_node }} start 192.168.1.16 stop 192.168.1.254
+
+    - set service dns forwarding listen-on switch0
+
+    - set system static-host-mapping host-name {{ system_hostname }} inet 192.168.1.1
+  notify: Save the active configuration in EdgeOS
+
+- name: Configure WAN on `eth1`
+  community.network.edgeos_config:
+    lines:
+    - set interfaces ethernet eth1 description Internet
+    - set interfaces ethernet eth1 address dhcp
+    - set interfaces ethernet eth1 dhcp-options name-server no-update
+
+    - set service nat rule 5010 description 'Masquerade for WAN'
+    - set service nat rule 5010 type masquerade
+    - set service nat rule 5010 outbound-interface eth1
+  notify: Save the active configuration in EdgeOS
+
+- name: Configure LAN with DHCP on `eth2`
+  vars:
+    dhcp_subnet_node: service dhcp-server shared-network-name Server subnet 192.168.2.0/24
+  community.network.edgeos_config:
+    lines:
+    - set interfaces ethernet eth2 address 192.168.2.1/24
+    - set interfaces ethernet eth2 description Server
+
+    - set {{ dhcp_subnet_node }} default-router 192.168.2.1
+    - "{{ router_domain | edgeos_action(on=dhcp_subnet_node + ' domain-name') }}"
+    - set {{ dhcp_subnet_node }} dns-server 192.168.2.1
+    - set {{ dhcp_subnet_node }} lease 86400
+    - set {{ dhcp_subnet_node }} start 192.168.2.16 stop 192.168.2.254
+
+    - set service dns forwarding listen-on eth2
+
+    - set system static-host-mapping host-name {{ system_hostname }} inet 192.168.2.1
+  notify: Save the active configuration in EdgeOS
+
+- import_tasks: dyndns.yaml
+- import_tasks: ipv6.yaml

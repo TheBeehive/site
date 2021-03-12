@@ -1,0 +1,97 @@
+- import_tasks: register.yaml
+
+- name: Ensure each ACME file location is available
+  file: path={{ item | dirname }} state=directory
+  loop: ["{{ acme_secret_file }}", "{{ acme_csr_file }}", "{{ acme_public_file }}"]
+  run_once: yes
+  delegate_to: localhost
+
+- name: Generate the OpenSSL certificate private key
+  community.crypto.openssl_privatekey_pipe:
+    content: "{{ lookup('file', acme_secret_file, errors='ignore') }}"
+    size: 4096
+    return_current_key: yes
+  register: acme_secret
+  delegate_to: localhost
+
+- name: Record the OpenSSL private key
+  command: ansible-vault encrypt --output {{ acme_secret_file | quote }} -
+  args:
+    stdin: "{{ acme_secret.privatekey }}"
+    stdin_add_newline: no
+  when: acme_secret.changed
+  delegate_to: localhost
+
+- name: Generate the OpenSSL certificate signing request
+  community.crypto.openssl_csr:
+    common_name: "{{ acme_common_name }}"
+    path: "{{ acme_csr_file }}"
+    privatekey_content: "{{ acme_secret.privatekey }}"
+    return_content: yes
+  register: acme_csr
+  delegate_to: localhost
+
+- name: Initiate the ACME challenge
+  acme_certificate:
+    acme_directory: "{{ acme_directory }}"
+    acme_version: 2
+    account_key_content: "{{ lookup('file', acme_root_secret_file) }}"
+    csr_content: "{{ acme_csr.csr }}"
+    fullchain_dest: "{{ acme_public_file }}"
+    remaining_days: 30
+  register: acme_certificate
+  delegate_to: localhost
+
+- name: Set the ACME challenge DNS record
+  cloudflare_dns:
+    api_token: "{{ cloudflare_dns_api_token }}"
+    record: "{{ item['dns-01'].record | dezone(zone=acme_zone) }}"
+    type: TXT
+    value: "{{ item['dns-01'].resource_value }}"
+    zone: "{{ acme_zone }}"
+  loop: "{{ acme_certificate.challenge_data.values() }}"
+  when: acme_certificate.changed
+  register: acme_record
+  delegate_to: localhost
+
+- name: Handle the ACME challenge
+  vars:
+    acme_ns: "{{ lookup('dig', acme_zone, 'qtype=NS', wantlist=True) }}"
+  block:
+  - name: Wait for DNS propagation
+    vars:
+      record: "{{ item[1]['dns-01'].record }}/TXT"
+      data: "{{ item[1]['dns-01'].resource_value }}"
+      server: "@{{ item[0] }}"
+    debug:
+      msg:
+    until: lookup('dig', record, server) == data
+    delay: 1
+    retries: 60
+    loop: "{{ acme_ns | product(acme_certificate.challenge_data.values()) }}"
+    when: acme_record.changed
+
+  - name: Answer the ACME challenge
+    acme_certificate:
+      acme_directory: "{{ acme_directory }}"
+      acme_version: 2
+      account_key_content: "{{ lookup('file', acme_root_secret_file) }}"
+      csr_content: "{{ acme_csr.csr }}"
+      fullchain_dest: "{{ acme_public_file }}"
+      remaining_days: 30
+      data: "{{ acme_certificate }}"
+      challenge: dns-01
+    when: acme_certificate.changed
+
+  always:
+  - name: Delete the ACME challenge DNS record
+    cloudflare_dns:
+      api_token: "{{ cloudflare_dns_api_token }}"
+      state: absent
+      record: "{{ item.result.record.name | dezone(zone=acme_zone) }}"
+      type: "{{ item.result.record.type }}"
+      value: "{{ item.result.record.content }}"
+      zone: "{{ item.result.record.zone_name }}"
+    loop: "{{ acme_record.results | default([]) }}"
+
+  delegate_to: localhost

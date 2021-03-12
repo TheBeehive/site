@@ -1,0 +1,3 @@
+router_domain: "{{ system_hostname | domainname }}"
+
+router_acme_file: /config/user-data/acme

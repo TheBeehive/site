@@ -1,0 +1,3 @@
+- name: Configure the router
+  hosts: router.kaimel.io
+  roles: [system, user, router]

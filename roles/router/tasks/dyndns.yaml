@@ -1,0 +1,22 @@
+- name: Retrieve the host's public IP address
+  ipify_facts:
+
+- name: Initialize the A record in DNS
+  cloudflare_dns:
+    api_token: "{{ cloudflare_dns_api_token }}"
+    record: "{{ system_hostname | dezone(router_dyndns_zone) }}"
+    proxied: no
+    type: A
+    value: "{{ ipify_public_ip }}"
+    zone: "{{ router_dyndns_zone }}"
+  delegate_to: localhost
+
+- name: Configure the dynamic DNS service
+  community.network.edgeos_config:
+    lines:
+    - set service dns dynamic interface eth1 service custom-cloudflare host-name {{ system_hostname }}
+    - set service dns dynamic interface eth1 service custom-cloudflare login {{ cloudflare_dns_account_email }}
+    - set service dns dynamic interface eth1 service custom-cloudflare password {{ cloudflare_dns_account_api_key }}
+    - set service dns dynamic interface eth1 service custom-cloudflare protocol cloudflare
+    - set service dns dynamic interface eth1 service custom-cloudflare options zone={{ router_dyndns_zone }}
+  notify: Save the active configuration in EdgeOS

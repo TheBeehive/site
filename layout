@@ -1,0 +1,8 @@
+router.kaimel.io
+lovelace.kaimel.io
+
+[all:vars]
+timezone=America/New_York
+
+[edgeos]
+router.kaimel.io

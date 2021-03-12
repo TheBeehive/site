@@ -1,0 +1,10 @@
+- name: Wait for DNS record propagation ...
+  vars:
+    data: "{{ item.resource_value }}"
+  debug:
+    msg:
+  no_log: true
+  until: lookup('dig', item.record, '@' + nameserver, 'qtype=TXT') == data
+  delay: 1
+  retries: 300
+  loop: "{{ acme_certificate.challenge_data.values() | map(attribute='dns-01') }}"

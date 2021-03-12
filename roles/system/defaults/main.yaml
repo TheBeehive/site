@@ -1,0 +1,3 @@
+# The name of the system's timezone from the zoneinfo database. Defaults to
+# "UTC".
+system_timezone: "{{ timezone | default('UTC') }}"

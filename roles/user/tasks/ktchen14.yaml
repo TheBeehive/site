@@ -1,0 +1,2 @@
+- import_tasks: ktchen14-debian.yaml
+  when: ansible_network_os is undefined and ansible_os_family == "Debian"

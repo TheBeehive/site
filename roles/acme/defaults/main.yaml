@@ -1,0 +1,21 @@
+# The ACME directory to use. This is the entry point URL to access CA server
+# API. For Let's Encrypt, the staging directory URL is
+# `https://acme-staging-v02.api.letsencrypt.org/directory`, and the production
+# directory URL is `https://acme-v02.api.letsencrypt.org/directory`. Defaults to
+# the Let's Encrypt staging directory URL.
+acme_directory: https://acme-v02.api.letsencrypt.org/directory
+
+# The name within the DNS zone that the certificate will be issued against. The
+# common name on the certificate will then be <acme_name>.<acme_zone>. Defaults
+# to the host portion of the inventory name of the current host.
+acme_name: "{{ system_hostname | hostname }}"
+
+# The DNS zone that the certificate will be issued against. The common name on
+# the certificate will then be <acme_name>.<acme_zone>. Defaults to the domain
+# portion of the inventory name of the current host.
+acme_zone: "{{ system_hostname | domainname }}"
+
+# Path to a file containing the ACME account RSA or Elliptic Curve key. Defaults
+# to `acme-root.secret` in the directory of the playbook that was passed to the
+# `ansible-playbook` command line.
+acme_root_secret_file: "{{ playbook_dir }}/acme/root.secret"

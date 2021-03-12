@@ -1,0 +1,5 @@
+ansible
+dnspython
+netaddr
+paramiko
+passlib

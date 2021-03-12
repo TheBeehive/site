@@ -1,0 +1,14 @@
+- name: Configure the OS on each host
+  hosts: all
+  roles: [system, user]
+
+- name: Configure the router
+  hosts: router.kaimel.io
+  roles: [router]
+
+- name: Configure host `lovelace`
+  hosts: lovelace.kaimel.io
+  roles: [docker, virtualization]
+  tasks:
+  - import_role: name=router tasks_from=static_dhcp.yaml
+    delegate_to: router.kaimel.io

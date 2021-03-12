@@ -1,0 +1,2 @@
+# Root directory of persistent Docker state. Defaults to "/srv/docker".
+docker_data_root: /srv/docker

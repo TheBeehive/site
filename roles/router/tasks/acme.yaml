@@ -1,0 +1,19 @@
+- import_role: name=acme
+
+- name: Upload the Let's Encrypt certificate
+  become: yes
+  vars:
+    ansible_connection: smart
+  copy:
+    content: |
+      {{ lookup('file', acme_secret_file) }}
+      {{ lookup('file', acme_public_file) }}
+    dest: "{{ router_acme_file }}"
+    owner: root
+    group: vyattacfg
+
+- name: Configure the GUI to use the certificate
+  community.network.edgeos_config:
+    lines:
+    - set service gui cert-file {{ router_acme_file }}
+  notify: Save the active configuration in EdgeOS

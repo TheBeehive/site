@@ -1,0 +1,52 @@
+- name: Install requirements for `apt_key`
+  become: yes
+  apt: { name: [ca-certificates, gnupg] }
+
+- name: Add Docker's APT key
+  become: yes
+  apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+
+- name: Add Docker's APT repository (for AMD64)
+  become: yes
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+  when: ansible_architecture == "x86_64"
+
+- name: Ensure `/srv/docker` is available
+  become: yes
+  file: path=/srv/docker state=directory
+
+- name: Install Docker
+  become: yes
+  apt: name=docker-ce policy_rc_d=101
+  register: docker_ce_package
+  notify: Restart the Docker service
+
+- name: Reload `systemd` configuration
+  become: yes
+  systemd: daemon_reload=yes
+  when: docker_ce_package.changed
+
+- name: Ensure `/etc/docker` is available
+  become: yes
+  file: path=/etc/docker state=directory
+
+- name: Upload the Docker daemon's configuration file
+  become: yes
+  template: dest=/etc/docker/daemon.json src=daemon.json.j2
+
+- name: Enable and start the Docker service
+  become: yes
+  systemd: name=docker enabled=yes state=started
+  register: docker_service
+
+- name: Add each person to the `docker` group
+  become: yes
+  user: name={{ item.username }} groups=docker append=yes
+  loop: "{{ people }}"
+
+- name: Install `docker-py`
+  become: yes
+  apt: name=python3-docker

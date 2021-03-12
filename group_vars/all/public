@@ -1,0 +1,13 @@
+people:
+- username: ktchen14
+  mail: ktchen14@gmail.com
+  name: Kaiting Chen
+  password: "{{ ktchen14_password }}"
+  authorized_keys:
+  - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDUzxF7LLpEAYq1qC5XqUWTuvBlOZgRvJvCx5O/FLO0EItHv3V60pEmMrDyZ88Ow6R+B/dIFH/5MRsuPLE9uq6ymE3CEsoxbHe2Badqwoi8QXSlPi9c0fQgymQfQf6rXLUF4zb6oFdQOuPITFPQDvbYTMDqblCIeGSFtRMb7LgFUEJ/9buQq9k6RasgdtrhFLL5DVrKbwiU+1IVzchcYmTjteuk4iEZbsD+YUus2JOKA3qXCnvKOas3p3VCWoqtnjPlPPl0Y/7IGr64yr3NxbgaZ49Jes9qNzhBUpP8q4SYV+oEV79sjyecfjm/NZFBSa0xsEHb7QOTjVWGiM0PmuF6VGlB7XQVZmHT+z+aznGLn7WSjnKEr9y69z7Z+Swht0sRmvgUA1KB6RFp5+pfLtZhdhRz3uLzjD7QYPcoOh/vd3h5Zu/s6UZEA9MaKlYRyZwFO0Nb9ucSyTyYYvt0+fi1QV56Ciq/G7z7sEhGUZGMh1hEmkYm96r7+fvpjLgEvmc= kaitingc@kaitingc-a02.vmware.com"
+
+- username: mplageman
+  name: Melanie Plageman
+  password: "{{ mplageman_password }}"
+  authorized_keys:
+  - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDHJkD9FiPTkgIMNWfh0t9/rcgI2mP27ui6a9navuMiVFsfXehm26Wq1zxr8tAclzbfTAXKafb1WSHYvya1saJiNs7feOoj6e76rME2cowMhXJvrt5kDGHKeu74OtyjykYqKERJWjIA975og7z4JTxIDGx5oj7LPOgsDc67RSOhrP1g61hC3e7TNLoyYGB7n5keiK1aw6gcISLUo55tGsK3KEomNqd3SWAu6QAHZbzCcoIgwLG6mjqix9oAZRQhllhXUTNF6ZNeGeQMfp4Jy1bvbeWgOd+PO+chJkmwIuopX6ts0lDOZjFXJTeLu5CcUGNGrKzxTET6e6ZpeE8CZaP+Q7sIXpQHO09xEnmvZS7wYahedUMRCd/rH5hYAvJufLQ/L6Y4KGXyU4SEZ4uDeg9ix8p2D2sbUvUQmiJtU60fr/FaNhiRvcbBkFZuERp7ik+F6Va5GOtqbr0E+GK+WpMD248+MdhqDjFsHFjg/xGzSHVCZ0fvkTCwLN/LNRDL2lM= melanieplageman@ubuntu-vm"

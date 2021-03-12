@@ -1,0 +1,31 @@
+- name: Update the hostname, domain name, and timezone
+  community.network.edgeos_config:
+    lines:
+    - set system host-name {{ system_hostname | hostname }}
+    - "{{ system_hostname | domainname | edgeos_action(on='system domain-name') }}"
+    - set system time-zone {{ system_timezone }}
+  notify: Save the active configuration in EdgeOS
+
+- name: Alias the system's hostname to its FQDN
+  community.network.edgeos_config:
+    lines:
+    - set system static-host-mapping host-name {{ system_hostname }} alias {{ system_hostname | hostname }}
+  notify: Save the active configuration in EdgeOS
+  when: system_hostname != (system_hostname | hostname)
+
+- name: Create a user account for each person
+  connection: network_cli
+  community.network.edgeos_config:
+    lines:
+    - set system login user {{ item.username }} full-name {{ item.name | quote }}
+    - set system login user {{ item.username }} level admin
+    - set system login user {{ item.username }} authentication encrypted-password {{ item.password | quote }}
+    save: yes
+  loop: "{{ people }}"
+
+- name: Load authorized keys for each person
+  include_tasks: edgeos_pk.yaml
+  when: person.authorized_keys is defined
+  loop: "{{ people }}"
+  loop_control:
+    loop_var: person

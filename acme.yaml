@@ -1,0 +1,4 @@
+- name: Configure the router with a Let's Encrypt certificate
+  hosts: router.kaimel.io
+  tasks:
+  - import_role: name=router tasks_from=acme.yaml

@@ -1,0 +1,5 @@
+acme_common_name: "{{ acme_name }}.{{ acme_zone }}"
+
+acme_secret_file: "{{ playbook_dir }}/acme/{{ acme_common_name }}.secret"
+acme_csr_file: "{{ playbook_dir }}/acme/{{ acme_common_name }}.csr"
+acme_public_file: "{{ playbook_dir }}/acme/{{ acme_common_name }}.public"

@@ -1,0 +1,4 @@
+- name: Include each person's task list
+  include_tasks: "{{ item.username }}.yaml"
+  loop: "{{ people }}"
+  when: (role_path, "tasks", item.username + ".yaml") | path_join is exists

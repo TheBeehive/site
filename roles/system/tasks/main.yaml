@@ -1,0 +1,5 @@
+- import_tasks: debian.yaml
+  when: ansible_network_os is undefined and ansible_os_family == "Debian"
+
+- import_tasks: edgeos.yaml
+  when: ansible_network_os is defined and ansible_network_os == "edgeos"

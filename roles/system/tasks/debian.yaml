@@ -1,0 +1,38 @@
+- name: Update the hostname
+  become: yes
+  hostname: name={{ system_hostname }}
+
+- name: Update the timezone
+  become: yes
+  timezone: name={{ system_timezone }}
+
+- name: Ensure `/etc/apt/apt.conf.d` is available
+  become: yes
+  file: path=/etc/apt/apt.conf.d state=directory
+
+- name: Install minimalist configuration for APT
+  become: yes
+  copy: dest=/etc/apt/apt.conf.d/99minimalist src=minimalist
+
+- name: Autoremove unnecessary packages
+  become: yes
+  apt: autoremove=yes
+
+- name: Enable sudo access without a password or TTY
+  become: yes
+  copy: dest=/etc/sudoers.d/sudo src=sudo mode=0440
+
+- name: Create a user account for each person
+  become: yes
+  user: name={{ item.username }}
+  loop: "{{ people }}"
+
+- name: Enable `sudo` access for each person
+  become: yes
+  user: name={{ item.username }} append=yes groups=sudo
+  loop: "{{ people }}"
+
+- name: Load authorized keys for each person
+  become: yes
+  authorized_key: user={{ item.0.username }} key={{ item.1 }}
+  loop: "{{ people | subelements('authorized_keys', skip_missing=True) }}"

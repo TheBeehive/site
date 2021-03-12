@@ -1,0 +1,3 @@
+- name: Save the active configuration in EdgeOS
+  community.network.edgeos_config:
+    save: yes
